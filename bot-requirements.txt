@@ -1,0 +1,4 @@
+paho-mqtt==1.5.1
+toml==0.10.2
+aiohttp==3.6.3
+PyNaCl==1.4.0

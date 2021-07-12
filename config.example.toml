@@ -1,0 +1,10 @@
+[bot]
+prefix = "alex "
+token = "insert token here"
+
+[mqtt]
+host = "localhost"
+port = 1883
+
+[rhasspy]
+site = "default"

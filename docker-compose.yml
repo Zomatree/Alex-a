@@ -1,0 +1,24 @@
+services:
+    bot:
+        build: .
+    server:
+        build:
+            dockerfile: ./ServerDockerfile
+            context: ./
+        ports:
+            - 8080:8080
+    mosquitto:
+        image: eclipse-mosquitto
+        ports:
+            - 1883:1883
+        volumes:
+            - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+    rhasspy:
+        image: rhasspy/rhasspy
+        ports:
+            - 12101:12101
+        volumes:
+            - $HOME/.config/rhasspy/profiles:/profiles
+            - /etc/localtime:/etc/localtime:ro
+        restart: unless-stopped
+        command: ["--user-profiles", "/profiles", "--profile", "en"]
