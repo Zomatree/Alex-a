@@ -8,6 +8,6 @@ COPY . /bot
 
 WORKDIR /bot
 
-RUN python3.9 -m pip install -r bot-requirements.txt
+RUN python3.9 -m pip install -r bot-requirements.txt && apt-get update && apt-get install libopus0
 
 CMD ["python3.9", "bot.py"]
