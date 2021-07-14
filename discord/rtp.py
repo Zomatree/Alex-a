@@ -314,7 +314,7 @@ class BYEPacket(RTCPPacket):
         body_length = 4 + len(self.ssrcs) * 4
         if len(data) > body_length:
             extra_len = struct.unpack_from('B', data, body_length)[0]
-            reason = struct.unpack_from('%ss' % extra_len, data, body_length + 1)
+            reason = struct.unpack_from('%ss' % extra_len, data, body_length + 1)[0]
             self.reason = reason.decode()
 
 # http://www.rfcreader.com/#rfc3550_line2353

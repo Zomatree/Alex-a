@@ -129,5 +129,5 @@ class SpeakingState:
         return self._bit(2)
 
     @priority.setter
-    def priority(self):
+    def priority(self, value):
         self._set(2, value)

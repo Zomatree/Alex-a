@@ -37,7 +37,7 @@ from . import rtp
 from .utils import Defaultdict
 from .rtp import SilencePacket
 from .opus import Decoder, BufferedDecoder
-from .errors import DiscordException
+from .errors import DiscordException, ClientException
 
 try:
     import nacl.secret
@@ -71,7 +71,7 @@ class SinkExit(DiscordException):
     """
 
     def __init__(self, *, drain=True, flush=False):
-        self.kwargs = kwargs
+        self.kwargs = {"drain": drain, "flush": flush}
 
 class AudioSink:
     def __del__(self):

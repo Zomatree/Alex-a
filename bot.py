@@ -18,38 +18,18 @@ logging.basicConfig(level=logging.INFO)
 with open("config.toml") as f:
     config = toml.load(f)
 
-class Bot(commands.Bot):
-
-    async def start(self, token: str):
-        self.session = aiohttp.ClientSession()
-        return await super().start(token)
-
-bot = Bot(commands.when_mentioned_or(config["bot"]["prefix"]))
+bot = commands.Bot(commands.when_mentioned_or(config["bot"]["prefix"]))
 
 class KichenSink(discord.AudioSink):
-    def __init__(self, config, play_func):
-        self.buffer = io.BytesIO()
-        self.file: wave.Wave_write = wave.open(self.buffer, 'w')
-        self.file.setnchannels(Decoder.CHANNELS)
-        self.file.setsampwidth(Decoder.SAMPLE_SIZE//Decoder.CHANNELS)
-        self.file.setframerate(Decoder.SAMPLING_RATE)
-        self.downsamped_buffer = io.BytesIO()
+    def __init__(self, play_func):
+        self.buffer = [b""]
 
-        self.audio_recorder = AudioRecorder(config, self.downsamped_buffer)
+        self.audio_recorder = AudioRecorder(config, self.buffer)
         self.audio_player = AudioPlayer(config, play_func)
 
     def write(self, data):
-        self.file.writeframes(data.data)
-        
-        start = time.time()
-        downsampled, _ = audioop.ratecv(self.buffer.read(), Decoder.SAMPLE_SIZE//Decoder.CHANNELS, Decoder.CHANNELS, Decoder.SAMPLING_RATE, FRAME_RATE, None)
-        self.downsamped_buffer.write(downsampled)
-
-    def cleanup(self):
-        try:
-            self.file.close()
-        except:
-            pass
+        downsampled, _ = audioop.ratecv(data.data, Decoder.SAMPLE_SIZE//Decoder.CHANNELS, Decoder.CHANNELS, Decoder.SAMPLING_RATE, FRAME_RATE, None)
+        self.buffer[0] = downsampled
 
     def start(self):
         self.audio_recorder.start()
@@ -59,24 +39,26 @@ class KichenSink(discord.AudioSink):
 async def join(ctx: commands.Context):
     if not (state := ctx.author.voice):  # type: ignore
         return await ctx.send("Not in vc")
-    
+
     vc: discord.VoiceClient = await state.channel.connect()
 
-    sink = KichenSink(config, vc.send_audio_packet)
-    
+    sink = KichenSink(vc.send_audio_packet)
+
     vc.listen(sink)
     sink.start()
-    
+
     await ctx.send("listening for voice commands.")
 
 @bot.command()
 async def eval(ctx, *, code: str):
     code = f"async def _runner(): {textwrap.indent(code, '    ')}"
-    exec_globals = globals()
+    exec_globals = globals().copy()
     exec(code, exec_globals)
 
     func_return = await exec_globals["_runner"]()
-    await ctx.send(func_return)
+
+    if func_return:
+        await ctx.send(func_return)
 
 @bot.event
 async def on_ready():
